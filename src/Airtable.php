@@ -13,20 +13,22 @@ namespace TANIOS\Airtable;
 use Stiphle\Throttle;
 
 
-class Airtable 
+class Airtable
 {
-	
+
     const API_URL = "https://api.airtable.com/v0/";
 
     private $_key;
 
     private $_base;
 
+    private $_slack;
+
     /**
      * @var Throttle\LeakyBucket
      */
     private $_throttle;
-	
+
 	public function __construct($config)
     {
 
@@ -40,6 +42,7 @@ class Airtable
 
             $this->setKey($config['api_key']);
             $this->setBase($config['base']);
+            $this->setSlack($config['slack_webhook']);
 
             if( ! empty( $config[ 'throttle' ] ) ) {
 
@@ -68,6 +71,16 @@ class Airtable
     public function getBase()
     {
         return $this->_base;
+    }
+
+    public function setSlack($slack)
+    {
+        $this->_slack = $slack;
+    }
+
+    public function getSlack()
+    {
+        return $this->_slack;
     }
 
     public function getApiUrl($request){
@@ -136,30 +149,30 @@ class Airtable
         return $request->getResponse();
 
     }
-    
+
     function quickCheck($content_type,$field="",$value="")
     {
         $params = "";
 
         if (!empty($field)&& !empty($value)){
-            
+
             $params = array(
                 "filterByFormula" => "AND({{$field}} = '$value')",
             );
         }
-        
+
         $request = new Request( $this, $content_type, $params, false );
 
         $response = $request->getResponse();
-        
-     
+
+
         $results['count'] = count($response->records);
         $results['records'] = $response->records;
-        
-     
+
+
         return (object)$results;
     }
-    
+
     private function _detectBatch( $input )
     {
 
